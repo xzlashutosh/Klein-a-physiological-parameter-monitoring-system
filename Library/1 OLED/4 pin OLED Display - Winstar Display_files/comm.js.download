@@ -1,0 +1,141 @@
+(function ($) {
+    $.fn.subNavStyle = function () {
+        return this.each(function () {
+            var $win = $(window),
+                $this = $(this),
+                $mainNav = $this.find('.main-nav>ul>li'),
+                $nav = $mainNav.filter('.on'),
+                $subNav = $nav.find('.sub-nav');
+            $mainNav.hover(function () {
+                $(this).addClass('on').siblings().removeClass('on');
+                $win.trigger('resize.setH');
+            }, function () {
+				if ($nav.length){
+					$nav.addClass('on').siblings().removeClass('on');	
+				}else {
+					$mainNav.removeClass('on');	
+				}
+                $win.trigger('resize.setH');
+            })
+            $win.on('resize.setH', function () {
+                if ($win.width() > 768 && $mainNav.filter('.on').find('.sub-nav').length) {
+                    var _height = $mainNav.filter('.on').find('.sub-nav').outerHeight() + 'px';
+                    $this.css({ 'padding-bottom': _height });
+                }
+                else {
+                    $this.css({'padding-bottom':''})
+                }
+            }).trigger('resize.setH');
+        })
+    }
+	$(function(){
+	    var $win = $(window),
+            $header = $('#header'),
+            $linkWrap = $header.find('.link-wrap'),
+            $mainNav = $('.main-nav'),
+            $mobileNav = $('.mobile-nav'),
+            $floatBtn = $('.icon-subscribe, .icon-finder'),
+            $iconFinder = $('.icon-finder'),
+            $iconSubScript = $('.icon-subscribe'),
+            $absForm = $('.abs-form'),
+            $commSide = $('.abs-wrap'),
+            $webAside = $('.web-aside'),
+            $banner = $('#banner'),
+            $dataImg = $('[data-img]'),
+			$goTop = $('#go-top'),
+			tempW = 0,
+	        resetLayout = function () {
+				var _w = $win.width();
+				if(tempW == _w) return false;
+				tempW = _w;
+	            if (_w > 768) {
+	                $floatBtn.prependTo($linkWrap);
+	                var absTop = $iconFinder.offset().top + $iconFinder.height() + 10;
+	                $absForm.css({ top: absTop + 'px' }).appendTo($('body'));
+
+	            } else {
+	                $floatBtn.prependTo($commSide.find('ul'));
+	                var absTop = $iconFinder.offset().top + $iconFinder.height() + 10;
+	                $absForm.css({ top: '' }).appendTo($commSide);
+	            }
+	        };
+
+	    /** banner背景滿版 */
+	    $banner.find('.bg').each(function(){
+	        var $img = $(this).find('img'),
+				_src = $img[0].src;
+	        $(this).backstretch(_src);
+	    })
+	    $win.on('resize.bg', function () {
+	        $banner.find('.bg').backstretch('resize');
+	    }).trigger('resize.bg');
+
+	    /** 圖片替換 */
+	    //預存mobile及web圖片
+	    $dataImg.each(function () {
+	        var _mjpg = this.src,
+				_wjpg = $(this).data('img');
+	        $(this).data('mjpg', _mjpg);
+	        $(this).data('wjpg', _wjpg);
+	    })
+	    $win.on('resize.jpg', function () {
+	        if ($(this).width() > 768) {
+	            $dataImg.each(function () {
+	                this.src = $(this).data('wjpg');
+	            })
+	        } else {
+	            $dataImg.each(function () {
+	                this.src = $(this).data('mjpg');
+	            });
+	        }
+	    }).trigger('resize.jpg');
+
+        /** 選單樣式 */
+	    $mainNav.on('click', '> ul > li > a', function (e) {
+	        if ($win.width() <= 768) {
+	            e.preventDefault();
+	            var $parent = $(this).parent(),
+	                isMore = $parent.is('.more');
+	            $(this).parent().toggleClass('touch').siblings().removeClass('touch');
+	            $mobileNav[isMore?'toggleClass':'removeClass']('on');
+	        }
+	    }).find('>ul>li').each(function (n) {
+	        var idx = n + 1;
+	        $(this).addClass('item' + idx);
+	    });
+	    $mainNav.find('.sub-nav > ul > li:odd').addClass('odd')
+            .end().find('.sub-nav>ul>li:has(.sub-node)').addClass('has-node');
+		$mainNav.find('.view:gt(2)').removeClass('view');
+	    $header.subNavStyle();
+
+        /** 點產品搜尋鈕 */
+	    $iconFinder.find('a').on('click', function (e) {
+	        e.preventDefault();
+	        var $this = $(this),
+                $parent = $this.parent(),
+                $item = $($(this).attr('href')),
+                _top = $parent.offset().top + $parent.height() + 10;    //箭頭10px
+	        $parent.addClass('on').siblings().removeClass('on');
+	        $item.addClass('on').siblings().removeClass('on');
+	        $absForm.addClass('on').css({ top: _top + 'px' });
+	    });
+
+        /** 關閉搜尋表單 */
+	    $absForm.find('.btn-close').on('click', function (e) {
+	        e.preventDefault();
+	        $absForm.removeClass('on');
+	        $floatBtn.removeClass('on');
+	    });
+		/** 回頂端事件 */
+        $goTop.on('click', function (e) {
+            e.preventDefault();
+            $('html, body').stop().animate({ scrollTop: 0 }, 300);
+        });
+		/** 各單元表格共用 */
+		$('table th[colspan]').addClass('colspan');
+		
+	    $win.on('resize', function () {
+	        resetLayout();
+	    }).trigger('resize');
+	})
+})(jQuery)
